@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 import sqlite3
+import seaborn as sns
 
 # The below link will show the schemas used for dev purposes
 # The table names match the file names without .csv
@@ -67,5 +68,47 @@ def all_time_first():
             print('Database connection closed.')
 
 
+def individual_circuit_lap_times(driver, circuit):
+    """
+    Takes driver and circuit as input and returns ridge plot of lap times by year
+    for given driver and circuit as well as finishing place.
+
+    :param driver: Any driver from the drivers table
+    :param circuit: Any circuit from the circuits table
+    :return: Plot showing lap times across the years
+    """
+
+    conn = None
+
+    try:
+        conn = sqlite3.connect('f1.db')
+        cur = conn.cursor()
+
+        sql = "SELECT lap, lap_times.milliseconds, drivers.forename || ' ' || drivers.surname AS full_name, " \
+              "circuits.name, races.year FROM lap_times " \
+              "LEFT JOIN drivers USING(driverId) " \
+              "LEFT JOIN races USING(raceId) " \
+              "JOIN circuits ON races.circuitId = circuits.circuitId " \
+              f"WHERE full_name = '{driver}' AND circuits.name = '{circuit}'"
+
+        data = pd.read_sql_query(sql, conn)
+        # print(data)
+
+        years = data['year']
+        times = data['milliseconds'] / 1000
+        title = f"{driver}'s lap time distribution at {circuit} in seconds"
+
+        scripts.ridge_plot(years, times, title)
+
+        cur.close()
+    except Exception as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
+
+
 if __name__ == '__main__':
-    all_time_first()
+    # all_time_first()
+    individual_circuit_lap_times('Lewis Hamilton', 'Autodromo Nazionale di Monza')

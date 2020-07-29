@@ -34,6 +34,11 @@ def setup():
     create_tables_db()
     insert_from_csv()
 
+    try:
+        os.remove('f1db_csv.zip')
+    except Exception as error:
+        print(error)
+
     print('Setup complete.')
 
 

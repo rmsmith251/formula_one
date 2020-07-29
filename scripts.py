@@ -1,6 +1,9 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from matplotlib import ticker
+import pandas as pd
+import seaborn as sns
+import app
 
 
 def heatmap(data, row_labels, col_labels, ax=None, cbar_kw={}, cbarlabel="", **kwargs):
@@ -121,3 +124,52 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
 
     return texts
 
+
+def ridge_plot(x, g, title, style="white"):
+    """
+
+    :param x: Numpy array of values to be used on the y axis (i.e. Years)
+    :param g: Numpy array of values to be used for generating the curves (i.e. Lap Time)
+    :param style: Optional variable to change the style of the plot (default is white)
+    :param title: Optional title of the chart (default is blank)
+    :return: Ridge plot of given arrays
+    """
+
+    sns.set(style=style, rc={"axes.facecolor": (0, 0, 0, 0)})
+    length = len(x.unique())
+
+    df = pd.DataFrame(dict(x=x, y=g))
+
+    pal = sns.cubehelix_palette(length, rot=-.25, light=.7)
+    g = sns.FacetGrid(df, row="x", hue="x", aspect=15, height=.5, palette=pal)
+
+    g.map(sns.kdeplot, "y", clip_on=False, shade=True, alpha=1, lw=1.5, bw=.2)
+    g.map(sns.kdeplot, "y", clip_on=False, color="w", lw=2, bw=.2)
+    g.map(plt.axhline, y=0, lw=2, clip_on=False)
+
+    def label(x, color, label):
+        ax = plt.gca()
+        ax.text(0, .2, label, fontweight="bold", color=color,
+                ha="left", va="center", transform=ax.transAxes)
+
+    g.map(label, x="x")
+
+    g.fig.subplots_adjust(hspace=-.25)
+
+    g.set_titles("")
+    g.set(yticks=[])
+    g.despine(bottom=True, left=True)
+    plt.suptitle(title)
+
+    plt.get_current_fig_manager().window.state('zoomed')
+
+    plt.show()
+
+
+if __name__ == '__main__':
+    # z = np.random.RandomState(1979)
+    # z = z.randn(500)
+    # y = np.tile(list("ABCDEFGHIJ"), 50)
+    # # print(z)
+    # ridge_plot(y, z)
+    app.individual_circuit_lap_times('Michael Schumacher', 'Circuit de Spa-Francorchamps')
