@@ -125,7 +125,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     return texts
 
 
-def ridge_plot(x, g, title, style="white"):
+def ridge_plot(x, g, title, style="white", label_x_adj=0, label_y_adj=.3):
     """
 
     :param x: Numpy array of values to be used on the y axis (i.e. Years)
@@ -141,7 +141,7 @@ def ridge_plot(x, g, title, style="white"):
     df = pd.DataFrame(dict(x=x, y=g))
 
     pal = sns.cubehelix_palette(length, rot=-.25, light=.7)
-    g = sns.FacetGrid(df, row="x", hue="x", aspect=15, height=.5, palette=pal)
+    g = sns.FacetGrid(df, row="x", hue="x", aspect=20, height=0.75, palette=pal)
 
     g.map(sns.kdeplot, "y", clip_on=False, shade=True, alpha=1, lw=1.5, bw=.2)
     g.map(sns.kdeplot, "y", clip_on=False, color="w", lw=2, bw=.2)
@@ -149,7 +149,7 @@ def ridge_plot(x, g, title, style="white"):
 
     def label(x, color, label):
         ax = plt.gca()
-        ax.text(0, .2, label, fontweight="bold", color=color,
+        ax.text(label_x_adj, label_y_adj, label, fontweight="bold", color=color,
                 ha="left", va="center", transform=ax.transAxes)
 
     g.map(label, x="x")

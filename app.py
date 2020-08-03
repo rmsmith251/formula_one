@@ -109,6 +109,48 @@ def individual_circuit_lap_times(driver, circuit):
             print('Database connection closed.')
 
 
+def lap_times_all_drivers_single_race(circuit, year):
+    """
+
+    :param circuit:
+    :param year:
+    :return:
+    """
+
+    conn = None
+    try:
+        conn = sqlite3.connect('f1.db')
+        cur = conn.cursor()
+
+        sql = "SELECT drivers.forename || ' ' || drivers.surname || ' - ' || results.position AS full_name, " \
+              "lap_times.milliseconds, races.year, circuits.name FROM lap_times " \
+              "LEFT JOIN drivers USING(driverId) " \
+              "LEFT JOIN races USING(raceId) " \
+              "JOIN circuits ON races.circuitId = circuits.circuitId " \
+              "JOIN results USING(raceId, driverId) " \
+              f"WHERE races.year = '{year}' AND circuits.name = '{circuit}' " \
+              "ORDER BY results.position ASC" \
+
+        data = pd.read_sql_query(sql, conn)
+        # print(data)
+
+        drivers = data['full_name']
+        times = data['milliseconds'] / 1000
+        # print(max(times))
+        title = f'Lap time distributions and final position at {circuit} in {year} (seconds)'
+
+        scripts.ridge_plot(drivers, times, title, label_x_adj=-.03, label_y_adj=.3)
+
+        cur.close()
+    except Exception as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
+
+
 if __name__ == '__main__':
     # all_time_first()
-    individual_circuit_lap_times('Lewis Hamilton', 'Autodromo Nazionale di Monza')
+    # individual_circuit_lap_times('Lewis Hamilton', 'Autodromo Nazionale di Monza')
+    lap_times_all_drivers_single_race('Autodromo Nazionale di Monza', 2018)
