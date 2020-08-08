@@ -1,9 +1,6 @@
 import scripts
-import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
-import sqlite3
-import seaborn as sns
 
 # The below link will show the schemas used for dev purposes
 # The table names match the file names without .csv
@@ -15,57 +12,43 @@ def all_time_first():
     Returns heatmap of the seasons with drivers that had more than 5 wins.
     """
 
-    conn = None
+    sql = "SELECT drivers.forename || ' ' || drivers.surname AS full_name, " \
+          "COUNT(*) AS wins, races.year FROM results " \
+          "LEFT JOIN drivers USING(driverId) " \
+          "LEFT JOIN races USING(raceId) " \
+          "WHERE results.position = 1 " \
+          "GROUP BY full_name, year " \
+          "HAVING COUNT(*) > 5 " \
+          "ORDER BY year DESC;"
 
-    try:
-        conn = sqlite3.connect('f1.db')
-        cur = conn.cursor()
+    data = scripts.db_pull(sql)
+    # print(data)
+    seasons = data['year'].unique()
+    drivers = data['full_name'].unique()
 
-        sql = "SELECT drivers.forename || ' ' || drivers.surname AS full_name, " \
-              "COUNT(*) AS wins, races.year FROM results " \
-              "LEFT JOIN drivers USING(driverId) " \
-              "LEFT JOIN races USING(raceId) " \
-              "WHERE results.position = 1 " \
-              "GROUP BY full_name, year " \
-              "HAVING COUNT(*) > 5 " \
-              "ORDER BY year DESC;"
+    d = {i: [] for i in drivers}
+    for driver in drivers:
+        for season in seasons:
+            value = data.query(f'full_name == "{driver}" & year == {season}')['wins'].sum()
+            d[f'{driver}'].append(value)
 
-        data = pd.read_sql_query(sql, conn)
-        # print(data)
-        seasons = data['year'].unique()
-        drivers = data['full_name'].unique()
+    # print(d)
 
-        d = {i: [] for i in drivers}
-        for driver in drivers:
-            for season in seasons:
-                value = data.query(f'full_name == "{driver}" & year == {season}')['wins'].sum()
-                d[f'{driver}'].append(value)
+    wins = pd.DataFrame(d).to_numpy()
+    # print(wins)
 
-        # print(d)
+    fig, ax = plt.subplots(1, 1)
 
-        wins = pd.DataFrame(d).to_numpy()
-        # print(wins)
+    im, cbar = scripts.heatmap(wins, seasons, drivers, ax=ax, cmap="turbo", cbarlabel="Wins", aspect='auto')
+    texts = scripts.annotate_heatmap(im, valfmt="{x:.0f}")
 
-        fig, ax = plt.subplots(1, 1)
+    ax.set_title('Drivers with more than 5 wins in a season since 1952')
 
-        im, cbar = scripts.heatmap(wins, seasons, drivers, ax=ax, cmap="turbo", cbarlabel="Wins", aspect='auto')
-        texts = scripts.annotate_heatmap(im, valfmt="{x:.0f}")
+    plt.subplots_adjust(bottom=0.043, top=0.895)
 
-        ax.set_title('Drivers with more than 5 wins in a season since 1952')
+    plt.get_current_fig_manager().window.state('zoomed')
 
-        plt.subplots_adjust(bottom=0.043, top=0.895)
-
-        plt.get_current_fig_manager().window.state('zoomed')
-
-        plt.show()
-
-        cur.close()
-    except (Exception, sqlite3.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            print('Database connection closed.')
+    plt.show()
 
 
 def individual_circuit_lap_times(driver, circuit):
@@ -78,76 +61,47 @@ def individual_circuit_lap_times(driver, circuit):
     :return: Plot showing lap times across the years
     """
 
-    conn = None
+    sql = "SELECT lap, lap_times.milliseconds, drivers.forename || ' ' || drivers.surname AS full_name, " \
+          "circuits.name, races.year FROM lap_times " \
+          "LEFT JOIN drivers USING(driverId) " \
+          "LEFT JOIN races USING(raceId) " \
+          "JOIN circuits ON races.circuitId = circuits.circuitId " \
+          f"WHERE full_name = '{driver}' AND circuits.name = '{circuit}'"
 
-    try:
-        conn = sqlite3.connect('f1.db')
-        cur = conn.cursor()
+    data = scripts.db_pull(sql)
+    # print(data)
 
-        sql = "SELECT lap, lap_times.milliseconds, drivers.forename || ' ' || drivers.surname AS full_name, " \
-              "circuits.name, races.year FROM lap_times " \
-              "LEFT JOIN drivers USING(driverId) " \
-              "LEFT JOIN races USING(raceId) " \
-              "JOIN circuits ON races.circuitId = circuits.circuitId " \
-              f"WHERE full_name = '{driver}' AND circuits.name = '{circuit}'"
+    years = data['year']
+    times = data['milliseconds'] / 1000
+    title = f"{driver}'s lap time distribution at {circuit} in seconds"
 
-        data = pd.read_sql_query(sql, conn)
-        # print(data)
-
-        years = data['year']
-        times = data['milliseconds'] / 1000
-        title = f"{driver}'s lap time distribution at {circuit} in seconds"
-
-        scripts.ridge_plot(years, times, title)
-
-        cur.close()
-    except Exception as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            print('Database connection closed.')
+    scripts.ridge_plot(years, times, title)
 
 
 def lap_times_all_drivers_single_race(circuit, year):
     """
-
-    :param circuit:
-    :param year:
-    :return:
+    Plots the distribution of lap-times for all drivers in a single race.
+    :param circuit: Desired circuit to show data for
+    :param year: Desired year to return the correct race
+    :return: Plot of the lap-time distributions
     """
 
-    conn = None
-    try:
-        conn = sqlite3.connect('f1.db')
-        cur = conn.cursor()
+    sql = "SELECT drivers.forename || ' ' || drivers.surname || ' - ' || results.position AS full_name, " \
+          "lap_times.milliseconds, races.year, circuits.name FROM lap_times " \
+          "LEFT JOIN drivers USING(driverId) " \
+          "LEFT JOIN races USING(raceId) " \
+          "JOIN circuits ON races.circuitId = circuits.circuitId " \
+          "JOIN results USING(raceId, driverId) " \
+          f"WHERE races.year = '{year}' AND circuits.name = '{circuit}' " \
+          "ORDER BY results.position ASC" \
 
-        sql = "SELECT drivers.forename || ' ' || drivers.surname || ' - ' || results.position AS full_name, " \
-              "lap_times.milliseconds, races.year, circuits.name FROM lap_times " \
-              "LEFT JOIN drivers USING(driverId) " \
-              "LEFT JOIN races USING(raceId) " \
-              "JOIN circuits ON races.circuitId = circuits.circuitId " \
-              "JOIN results USING(raceId, driverId) " \
-              f"WHERE races.year = '{year}' AND circuits.name = '{circuit}' " \
-              "ORDER BY results.position ASC" \
+    data = scripts.db_pull(sql)
 
-        data = pd.read_sql_query(sql, conn)
-        # print(data)
+    drivers = data['full_name']
+    times = data['milliseconds'] / 1000
+    title = f'Lap time distributions and final position at {circuit} in {year} (seconds)'
 
-        drivers = data['full_name']
-        times = data['milliseconds'] / 1000
-        # print(max(times))
-        title = f'Lap time distributions and final position at {circuit} in {year} (seconds)'
-
-        scripts.ridge_plot(drivers, times, title, label_x_adj=-.03, label_y_adj=.3)
-
-        cur.close()
-    except Exception as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            print('Database connection closed.')
+    scripts.ridge_plot(drivers, times, title, label_x_adj=-.03, label_y_adj=.3)
 
 
 if __name__ == '__main__':

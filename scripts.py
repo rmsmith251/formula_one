@@ -4,6 +4,24 @@ from matplotlib import ticker
 import pandas as pd
 import seaborn as sns
 import app
+import sqlite3
+
+
+def db_pull(sql):
+
+    conn = None
+    try:
+        conn = sqlite3.connect('f1.db')
+        cur = conn.cursor()
+        data = pd.read_sql_query(sql, conn)
+        cur.close()
+    except Exception as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
+    return data
 
 
 def heatmap(data, row_labels, col_labels, ax=None, cbar_kw={}, cbarlabel="", **kwargs):
