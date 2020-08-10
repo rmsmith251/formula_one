@@ -104,7 +104,47 @@ def lap_times_all_drivers_single_race(circuit, year):
     scripts.ridge_plot(drivers, times, title, label_x_adj=-.03, label_y_adj=.3)
 
 
+def driver_podium_by_circuit(driver):
+
+    sql = "SELECT drivers.forename || ' ' || drivers.surname AS full_name, " \
+          "circuits.name, results.position, COUNT(*) AS circuit_podiums FROM results " \
+          "LEFT JOIN drivers USING(driverId) " \
+          "LEFT JOIN races USING(raceId) " \
+          "JOIN circuits USING(circuitId) " \
+          f"WHERE results.position < 4 and full_name = '{driver}' " \
+          "GROUP BY full_name, circuits.name " \
+          "ORDER BY circuit_podiums ASC"
+
+    data = scripts.db_pull(sql)
+    circuits = data['name']
+    pods = data['circuit_podiums']
+    title = f'{driver} podiums by circuit - all time'
+
+    scripts.bar(circuits, pods, title=title, x_label='Circuit', y_label='Podiums')
+
+
+def constructor_podium_by_circuit(constructor):
+    sql = "SELECT circuits.name AS circuit, results.position, constructors.name AS constructor, " \
+          "COUNT(*) AS circuit_podiums FROM results " \
+          "LEFT JOIN constructors USING(constructorId) " \
+          "LEFT JOIN races USING(raceId) " \
+          "JOIN circuits USING(circuitId) " \
+          f"WHERE results.position < 4 and constructor = '{constructor}' " \
+          "GROUP BY constructor, circuit " \
+          "ORDER BY circuit_podiums ASC"
+
+    data = scripts.db_pull(sql)
+    # print(data)
+    circuits = data['circuit']
+    pods = data['circuit_podiums']
+    title = f'{constructor} podiums by circuit - all time'
+
+    scripts.bar(circuits, pods, title=title, x_label='Circuit', y_label='Podiums')
+
+
 if __name__ == '__main__':
     # all_time_first()
     # individual_circuit_lap_times('Lewis Hamilton', 'Autodromo Nazionale di Monza')
-    lap_times_all_drivers_single_race('Autodromo Nazionale di Monza', 2018)
+    # lap_times_all_drivers_single_race('Autodromo Nazionale di Monza', 2018)
+    # driver_podium_by_circuit("Lewis Hamilton")
+    constructor_podium_by_circuit('McLaren')

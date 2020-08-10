@@ -3,12 +3,14 @@ import numpy as np
 from matplotlib import ticker
 import pandas as pd
 import seaborn as sns
-import app
 import sqlite3
 
 
 def db_pull(sql):
-
+    """
+    :param sql: SQL statement for desired data
+    :return: DataFrame of desired data
+    """
     conn = None
     try:
         conn = sqlite3.connect('f1.db')
@@ -145,11 +147,12 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
 
 def ridge_plot(x, g, title, style="white", label_x_adj=0, label_y_adj=.3):
     """
+    A ridge plot is a series of distributions of inputted data.
 
     :param x: Numpy array of values to be used on the y axis (i.e. Years)
     :param g: Numpy array of values to be used for generating the curves (i.e. Lap Time)
-    :param style: Optional variable to change the style of the plot (default is white)
-    :param title: Optional title of the chart (default is blank)
+    :param style: Optional string to change the style of the plot (default is white)
+    :param title: Optional string to set the title of the chart (default is blank)
     :return: Ridge plot of given arrays
     """
 
@@ -184,10 +187,57 @@ def ridge_plot(x, g, title, style="white", label_x_adj=0, label_y_adj=.3):
     plt.show()
 
 
+def bar(x_data, y_data, title="", x_label="", y_label=""):
+    """
+    :param x_data: Array of data for the x axis
+    :param y_data: Array of data for the bars/y axis
+    :param title: Optional string to set the title of the chart (default is blank)
+    :param x_label: Optional string to set the x axis label (default is blank)
+    :param y_label: Optional string to set the y axis label (default is blank)
+    :return: Bar chart of x_data and y_data
+    """
+    fig, ax = plt.subplots(constrained_layout=True)
+    plt.title(title)
+    rectangles = ax.bar(x_data, y_data)
+    plt.xticks(rotation=45, ha="right")
+    ax.set_ylabel(ylabel=y_label)
+    ax.set_xlabel(xlabel=x_label)
+
+    def autolabel(rects):
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+    autolabel(rectangles)
+
+    plt.get_current_fig_manager().window.state('zoomed')
+
+    plt.show()
+
+
+def pie(data,labels):
+
+    fig, ax = plt.subplots(constrained_layout=True)
+    plt.title("")
+    ax.pie(data, labels=labels, autopct='%1.1f%%',
+           shadow=False, startangle=90)
+    ax.axis('equal')
+
+    plt.get_current_fig_manager().window.state('zoomed')
+    plt.show()
+
+
+def nested_pie(data_outer, data_inner, labels_outer, labels_inner):
+    pass
+
+
+
 if __name__ == '__main__':
-    # z = np.random.RandomState(1979)
-    # z = z.randn(500)
-    # y = np.tile(list("ABCDEFGHIJ"), 50)
-    # # print(z)
-    # ridge_plot(y, z)
-    app.individual_circuit_lap_times('Michael Schumacher', 'Circuit de Spa-Francorchamps')
+    # app.individual_circuit_lap_times('Michael Schumacher', 'Circuit de Spa-Francorchamps')
+    labels = 'Frogs', 'Hogs', 'Dogs', 'Logs'
+    sizes = [15, 30, 45, 10]
+    pie(sizes, labels)
