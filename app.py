@@ -129,7 +129,7 @@ def constructor_podium_by_circuit(constructor):
           "LEFT JOIN constructors USING(constructorId) " \
           "LEFT JOIN races USING(raceId) " \
           "JOIN circuits USING(circuitId) " \
-          f"WHERE results.position < 4 and constructor = '{constructor}' " \
+          f"WHERE results.position < 4 AND constructor = '{constructor}' " \
           "GROUP BY constructor, circuit " \
           "ORDER BY circuit_podiums ASC"
 
@@ -142,9 +142,30 @@ def constructor_podium_by_circuit(constructor):
     scripts.bar(circuits, pods, title=title, x_label='Circuit', y_label='Podiums')
 
 
+def podiums_by_year(year):
+    sql = "SELECT drivers.surname, COUNT(*) AS podiums, constructors.name FROM races " \
+          "JOIN results USING(raceId) " \
+          "JOIN drivers USING(driverId) " \
+          "JOIN constructors USING(constructorId) " \
+          f"WHERE races.year = {year} AND results.position < 4 " \
+          "GROUP BY drivers.surname " \
+          "ORDER BY constructors.name"
+
+    data = scripts.db_pull(sql)
+    con_pods = data[['name', 'podiums']].groupby('name').podiums.sum()
+    con_pods = [con_pods[i] for i in range(len(con_pods))]
+    con_labels = data['name'].unique()
+    driver_pods = data['podiums']
+    driver_labels = data['surname']
+
+    scripts.nested_pie(con_pods, driver_pods,
+                       labels_outer=con_labels, labels_inner=driver_labels)
+
+
 if __name__ == '__main__':
     # all_time_first()
     # individual_circuit_lap_times('Lewis Hamilton', 'Autodromo Nazionale di Monza')
     # lap_times_all_drivers_single_race('Autodromo Nazionale di Monza', 2018)
     # driver_podium_by_circuit("Lewis Hamilton")
-    constructor_podium_by_circuit('McLaren')
+    # constructor_podium_by_circuit('McLaren')
+    podiums_by_year(2019)

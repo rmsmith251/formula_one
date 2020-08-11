@@ -231,13 +231,36 @@ def pie(data,labels):
     plt.show()
 
 
-def nested_pie(data_outer, data_inner, labels_outer, labels_inner):
-    pass
+def nested_pie(data_outer, data_inner, labels_outer=None, labels_inner=None):
+    """
+    Important: Be sure that both arrays are sorted in the same manner\n
+    (i.e. outer = [3, 4, 5, 6] and inner = [1, 2, 2, 2, 1, 4, 2, 3, 1] where:
+    outer[0] = inner[0:2],\n
+    outer[1] = inner[2:4],\n
+    outer[2] = inner[4:6],\n
+    outer[3] = inner[6:], etc)\n
+    :param data_outer: Array of data to be displayed on outer chart, sorted
+    :param data_inner: Array of data to be displayed on inner chart, sorted
+    :param labels_outer: Labels to display for outer chart (default is None)
+    :param labels_inner: Unused (default is None)
+    """
+    ax = plt.subplots()
 
+    plt.pie(data_outer, labels=labels_outer, startangle=90, frame=True)
+    plt.pie(data_inner, labels=labels_inner, radius=0.75, startangle=90)
+    center_circle = plt.Circle((0, 0), 0.5, color='black',
+                               fc='white', linewidth=0)
+    fig = plt.gcf()
+    fig.gca().add_artist(center_circle)
+
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == '__main__':
     # app.individual_circuit_lap_times('Michael Schumacher', 'Circuit de Spa-Francorchamps')
     labels = 'Frogs', 'Hogs', 'Dogs', 'Logs'
-    sizes = [15, 30, 45, 10]
-    pie(sizes, labels)
+    data = [3, 4, 5, 6]
+    data2 = [1, 2, 2, 2, 1, 4, 2, 3, 1]
+    nested_pie(data, data2)
+
