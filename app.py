@@ -157,9 +157,10 @@ def podiums_by_year(year):
     con_labels = data['name'].unique()
     driver_pods = data['podiums']
     driver_labels = data['surname']
+    title = f'Podium breakdown for {year}'
 
     scripts.nested_pie(con_pods, driver_pods,
-                       labels_outer=con_labels, labels_inner=driver_labels)
+                       labels_outer=con_labels, labels_inner=driver_labels, title=title)
 
 
 if __name__ == '__main__':

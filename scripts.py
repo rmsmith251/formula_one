@@ -219,7 +219,7 @@ def bar(x_data, y_data, title="", x_label="", y_label=""):
     plt.show()
 
 
-def pie(data,labels):
+def pie(data, labels):
 
     fig, ax = plt.subplots(constrained_layout=True)
     plt.title("")
@@ -232,7 +232,7 @@ def pie(data,labels):
 
 
 def nested_pie(data_outer, data_inner, labels_outer=None, labels_inner=None,
-               inner_label_distance=0.7, rotate_inner_labels=40):
+               inner_label_distance=0.7, rotate_inner_labels=40, title=""):
     """
     Important: Be sure that both arrays are sorted in the same manner\n
     (i.e. outer = [3, 4, 5, 6] and inner = [1, 2, 2, 2, 1, 4, 2, 3, 1] where:
@@ -242,10 +242,11 @@ def nested_pie(data_outer, data_inner, labels_outer=None, labels_inner=None,
     outer[3] = inner[6:], etc)\n
     :param data_outer: Array of data to be displayed on outer chart, sorted
     :param data_inner: Array of data to be displayed on inner chart, sorted
-    :param labels_outer: Labels to display for outer chart (default is None)
-    :param labels_inner: Unused (default is None)
-    :param inner_label_distance:
-    :param rotate_inner_labels:
+    :param labels_outer: Labels to display for outer donut (default is None)
+    :param labels_inner: Labels to display for inner donut (default is None)
+    :param inner_label_distance: Moves the labels in case of a clash (default is 0.7)
+    :param rotate_inner_labels: Rotates the labels if desired (default is 40)
+    :param title: Title to display above nested pie chart
     """
 
     plt.pie(data_outer, labels=labels_outer, autopct='%1.1f%%',
@@ -254,6 +255,8 @@ def nested_pie(data_outer, data_inner, labels_outer=None, labels_inner=None,
             rotatelabels=rotate_inner_labels, radius=0.75, startangle=90)
     center_circle = plt.Circle((0, 0), 0.5, color='black',
                                fc='white', linewidth=0)
+
+    plt.title(title)
 
     fig = plt.gcf()
     fig.gca().add_artist(center_circle)
