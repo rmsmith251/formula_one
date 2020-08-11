@@ -231,7 +231,8 @@ def pie(data,labels):
     plt.show()
 
 
-def nested_pie(data_outer, data_inner, labels_outer=None, labels_inner=None):
+def nested_pie(data_outer, data_inner, labels_outer=None, labels_inner=None,
+               inner_label_distance=0.7, rotate_inner_labels=40):
     """
     Important: Be sure that both arrays are sorted in the same manner\n
     (i.e. outer = [3, 4, 5, 6] and inner = [1, 2, 2, 2, 1, 4, 2, 3, 1] where:
@@ -243,17 +244,22 @@ def nested_pie(data_outer, data_inner, labels_outer=None, labels_inner=None):
     :param data_inner: Array of data to be displayed on inner chart, sorted
     :param labels_outer: Labels to display for outer chart (default is None)
     :param labels_inner: Unused (default is None)
+    :param inner_label_distance:
+    :param rotate_inner_labels:
     """
-    ax = plt.subplots()
 
-    plt.pie(data_outer, labels=labels_outer, startangle=90, frame=True)
-    plt.pie(data_inner, labels=labels_inner, radius=0.75, startangle=90)
+    plt.pie(data_outer, labels=labels_outer, autopct='%1.1f%%',
+            pctdistance=0.86, startangle=90, frame=True)
+    plt.pie(data_inner, labels=labels_inner, labeldistance=inner_label_distance,
+            rotatelabels=rotate_inner_labels, radius=0.75, startangle=90)
     center_circle = plt.Circle((0, 0), 0.5, color='black',
                                fc='white', linewidth=0)
+
     fig = plt.gcf()
     fig.gca().add_artist(center_circle)
 
     plt.tight_layout()
+    plt.get_current_fig_manager().window.state('zoomed')
     plt.show()
 
 
